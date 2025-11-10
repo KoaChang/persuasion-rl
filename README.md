@@ -2,7 +2,7 @@
 
 This repository contains the Supervised Fine-Tuning (SFT) phase of a persuasion-focused reinforcement learning project. The goal is to train Qwen2.5-0.5B on persuasion dialogues from CMV (ChangeMyView) and generate preference data for future RLHF/RLAIF training.
 
-**Default Configuration**: 30,000 examples from CMV dataset only (PersuasionForGood disabled by default).
+**Default Configuration**: 50,000 examples from CMV dataset only (PersuasionForGood disabled by default).
 
 ## Project Overview
 
@@ -16,8 +16,10 @@ This project implements the SFT portion of a larger system that will eventually 
 ### Current Phase: SFT Training
 
 - Train Qwen2.5-0.5B with LoRA on CMV (ChangeMyView) dataset
-- Default: 30,000 training examples (configurable: 20k-60k)
+- Default: 50,000 training examples (configurable: 30k-100k)
 - Generate preference data (2 responses per prompt) for future RLHF/RLAIF stages
+  - RLAIF: 8,000 prompts (from val + test sets)
+  - RLHF: 300 prompts (from test set)
 - PersuasionForGood dataset code available but disabled by default
 
 ## Repository Structure
@@ -136,23 +138,26 @@ python src/data/preprocess_persuasionforgood.py \
 
 #### 4. Create SFT Dataset
 
-**Default: 30k examples from CMV only** (PersuasionForGood disabled due to quality concerns)
+**Default: 50k examples from CMV only** (PersuasionForGood disabled due to quality concerns)
 
 ```bash
 python src/data/create_sft_dataset.py \
     --cmv-file data/processed/cmv_examples.jsonl \
     --use-cmv \
-    --max-examples 30000 \
+    --max-examples 50000 \
     --output-dir data/processed
 ```
 
-To re-enable PersuasionForGood or use different size:
+To use different size:
 ```bash
-# Use 50k examples from CMV
-python src/data/create_sft_dataset.py --use-cmv --max-examples 50000
+# Use 30k examples (faster, cheaper)
+python src/data/create_sft_dataset.py --use-cmv --max-examples 30000
+
+# Use 100k examples (maximum quality)
+python src/data/create_sft_dataset.py --use-cmv --max-examples 100000
 
 # Use both CMV and P4G
-python src/data/create_sft_dataset.py --use-cmv --use-p4g --max-examples 30000
+python src/data/create_sft_dataset.py --use-cmv --use-p4g --max-examples 50000
 ```
 
 This creates:
@@ -188,22 +193,25 @@ python src/sft/generate_preferences.py \
     --model-path models/checkpoints/qwen-sft/final \
     --base-model Qwen/Qwen2.5-0.5B-Instruct \
     --test-file data/processed/sft_test.jsonl \
+    --val-file data/processed/sft_val.jsonl \
+    --use-val-set \
     --output-dir data/preferences \
-    --ai-pool-size 10000 \
+    --ai-pool-size 8000 \
     --human-pool-size 300
 ```
 
 This generates:
 
-- **AI pool**: 10,000 prompts with 2 responses each (for future RLAIF)
-- **Human pool**: 300 prompts with 2 responses each (for future RLHF)
+- **AI pool**: 8,000 prompts with 2 responses each (from val + test sets, for RLAIF)
+- **Human pool**: 300 prompts with 2 responses each (from test set, for RLHF)
 
 Output files:
 
-- `data/preferences/ai_pool_prompts.jsonl`
-- `data/preferences/ai_pool_responses.jsonl`
-- `data/preferences/human_pool_prompts.jsonl`
-- `data/preferences/human_pool_responses.jsonl`
+- `data/preferences/ai_pool_prompts.jsonl` - 8,000 prompts for RLAIF
+- `data/preferences/ai_pool_responses.jsonl` - 8,000 × 2 responses
+- `data/preferences/human_pool_prompts.jsonl` - 300 prompts for RLHF
+- `data/preferences/human_pool_responses.jsonl` - 300 × 2 responses
+- `data/preferences/final_eval_prompts.jsonl` - ~1,700 held-out prompts for final evaluation ⭐
 
 #### 7. Evaluate Model
 
@@ -242,19 +250,26 @@ Key parameters:
 
 **Current Setup (Default)**:
 - **Source**: CMV (ChangeMyView) only
-- **Size**: 30,000 examples
-- **Rationale**: 100x RLHF data (300), 3x RLAIF data (10k)
+- **Size**: 50,000 examples
+- **Splits**: 40k train / 5k val / 5k test
+- **Preference Data**:
+  - RLAIF: 8,000 prompts (from val + test sets)
+  - RLHF: 300 prompts (from test set)
+- **Rationale**: 160x RLHF data (300), 6.25x RLAIF data (8k)
 
 To use different configuration:
 ```bash
-# 50k examples (stronger model, higher cost)
-python src/data/create_sft_dataset.py --max-examples 50000
+# 30k examples (faster, cheaper)
+python src/data/create_sft_dataset.py --max-examples 30000
+
+# 100k examples (maximum quality)
+python src/data/create_sft_dataset.py --max-examples 100000
 
 # Re-enable PersuasionForGood
 python src/data/create_sft_dataset.py --use-cmv --use-p4g
 ```
 
-See [docs/CMV_ONLY_CONFIGURATION.md](docs/CMV_ONLY_CONFIGURATION.md) and [docs/SFT_DATASET_SIZE_ANALYSIS.md](docs/SFT_DATASET_SIZE_ANALYSIS.md) for detailed guidance.
+See [docs/CMV_ONLY_CONFIGURATION.md](docs/CMV_ONLY_CONFIGURATION.md) for detailed guidance.
 
 ## Data Format
 
@@ -350,9 +365,10 @@ If model loading fails:
 Comprehensive guides are available in the `docs/` folder:
 
 - **[AWS_SETUP_GUIDE.md](docs/AWS_SETUP_GUIDE.md)** - Complete AWS setup walkthrough (account creation to first training run)
-- **[CMV_ONLY_CONFIGURATION.md](docs/CMV_ONLY_CONFIGURATION.md)** - Why CMV-only and how to customize (NEW)
+- **[DATASET_SIZES_SUMMARY.md](docs/DATASET_SIZES_SUMMARY.md)** - Updated configuration: 50k SFT, 8k RLAIF, 300 RLHF
+- **[FINAL_EVALUATION_GUIDE.md](docs/FINAL_EVALUATION_GUIDE.md)** - How to use the held-out test set for unbiased evaluation (NEW)
+- **[CMV_ONLY_CONFIGURATION.md](docs/CMV_ONLY_CONFIGURATION.md)** - Why CMV-only and how to customize
 - **[EXECUTION_GUIDE.md](docs/EXECUTION_GUIDE.md)** - Step-by-step execution instructions
-- **[SFT_DATASET_SIZE_ANALYSIS.md](docs/SFT_DATASET_SIZE_ANALYSIS.md)** - Recommendations for SFT dataset sizing (30k-60k examples)
 - **[IMPLEMENTATION_COMPLETE.md](docs/IMPLEMENTATION_COMPLETE.md)** - Implementation summary and deliverables
 - **[TODO.md](docs/TODO.md)** - Project progress and future phases
 

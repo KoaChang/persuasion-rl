@@ -41,13 +41,15 @@ def extract_prompts_from_test_set(
     test_file: str,
     ai_pool_size: int,
     human_pool_size: int,
-    seed: int = 42
+    seed: int = 42,
+    val_file: str = None
 ) -> tuple:
     """
-    Extract prompts from test set for preference generation.
+    Extract prompts from test (and optionally val) set for preference generation.
     
     Returns:
-        (ai_pool_prompts, human_pool_prompts)
+        (ai_pool_prompts, human_pool_prompts, unused_prompts)
+        unused_prompts: held-out prompts for final evaluation (never used for preferences)
     """
     print(f"Loading test examples from {test_file}...")
     test_data = load_jsonl(test_file)
@@ -61,6 +63,18 @@ def extract_prompts_from_test_set(
         })
     
     print(f"  Loaded {len(prompts)} prompts from test set")
+    
+    # Load validation set if provided (for larger AI pool)
+    if val_file:
+        print(f"Loading validation examples from {val_file}...")
+        val_data = load_jsonl(val_file)
+        for example in val_data:
+            prompts.append({
+                "prompt": example["input_text"],
+                "metadata": example.get("metadata", {})
+            })
+        print(f"  Loaded {len(val_data)} prompts from validation set")
+        print(f"  Total prompts available: {len(prompts)}")
     
     # Sample pools
     random.seed(seed)
@@ -87,11 +101,19 @@ def extract_prompts_from_test_set(
         random.shuffle(prompts)
         human_pool = prompts[:human_pool_size]
         ai_pool = prompts[human_pool_size:human_pool_size + ai_pool_size]
+        # Save remaining prompts for final evaluation (completely held-out)
+        unused_prompts = prompts[human_pool_size + ai_pool_size:]
     
     print(f"  Created AI pool: {len(ai_pool)} prompts")
     print(f"  Created Human pool: {len(human_pool)} prompts")
     
-    return ai_pool, human_pool
+    # Report unused prompts for final evaluation
+    if len(prompts) > total_needed:
+        print(f"  Held-out for final eval: {len(unused_prompts)} prompts (never used for preferences)")
+    else:
+        unused_prompts = []
+    
+    return ai_pool, human_pool, unused_prompts
 
 
 def generate_two_responses(
@@ -206,6 +228,18 @@ def main():
         help="Test file to extract prompts from"
     )
     parser.add_argument(
+        "--val-file",
+        type=str,
+        default="data/processed/sft_val.jsonl",
+        help="Validation file to extract additional prompts from (optional)"
+    )
+    parser.add_argument(
+        "--use-val-set",
+        action="store_true",
+        default=True,
+        help="Use validation set for preference generation (default: True)"
+    )
+    parser.add_argument(
         "--output-dir",
         type=str,
         default="data/preferences",
@@ -214,7 +248,7 @@ def main():
     parser.add_argument(
         "--ai-pool-size",
         type=int,
-        default=10000,
+        default=8000,
         help="Number of prompts for AI pool"
     )
     parser.add_argument(
@@ -254,9 +288,11 @@ def main():
     device = "cuda" if torch.cuda.is_available() else "cpu"
     print(f"Using device: {device}")
     
-    # Extract prompt pools from test set
-    ai_pool, human_pool = extract_prompts_from_test_set(
+    # Extract prompt pools from test (and val) set
+    val_file = args.val_file if args.use_val_set else None
+    ai_pool, human_pool, unused_pool = extract_prompts_from_test_set(
         test_file=args.test_file,
+        val_file=val_file,
         ai_pool_size=args.ai_pool_size,
         human_pool_size=args.human_pool_size,
         seed=args.seed
@@ -268,6 +304,7 @@ def main():
     
     ai_prompts_file = output_dir / "ai_pool_prompts.jsonl"
     human_prompts_file = output_dir / "human_pool_prompts.jsonl"
+    final_eval_file = output_dir / "final_eval_prompts.jsonl"
     
     save_jsonl(ai_pool, str(ai_prompts_file))
     save_jsonl(human_pool, str(human_prompts_file))
@@ -275,6 +312,15 @@ def main():
     print(f"\nSaved prompt pools:")
     print(f"  AI pool: {ai_prompts_file}")
     print(f"  Human pool: {human_prompts_file}")
+    
+    # Save held-out prompts for final evaluation
+    if unused_pool:
+        save_jsonl(unused_pool, str(final_eval_file))
+        print(f"  Final eval (held-out): {final_eval_file} ({len(unused_pool)} prompts)")
+        print(f"\n  ⭐ These {len(unused_pool)} prompts are NEVER used for preference generation.")
+        print(f"     Use them for unbiased final evaluation of all models!")
+    else:
+        print(f"\n  Note: No unused prompts (all {len(ai_pool) + len(human_pool)} used for preferences)")
     
     # Load model
     print(f"\nLoading trained SFT model from {args.model_path}...")

@@ -60,17 +60,17 @@ echo "To enable P4G, use --use-p4g flag in create_sft_dataset.py"
 
 echo ""
 echo "================================================"
-echo "Step 4: Creating SFT dataset (30k examples from CMV)..."
+echo "Step 4: Creating SFT dataset (50k examples from CMV)..."
 echo "================================================"
 python src/data/create_sft_dataset.py \
     --cmv-file data/processed/cmv_examples.jsonl \
     --use-cmv \
-    --max-examples 30000 \
+    --max-examples 50000 \
     --output-dir data/processed
 
 echo ""
 echo "================================================"
-echo "Step 5: Training SFT model (on 30k CMV examples)..."
+echo "Step 5: Training SFT model (on 50k CMV examples)..."
 echo "================================================"
 python src/sft/train_sft.py --config configs/sft_config.yaml
 
