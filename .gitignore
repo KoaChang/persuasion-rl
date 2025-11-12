@@ -38,8 +38,8 @@ ENV/
 *~
 
 # Data directories (too large for git)
-data/
-models/checkpoints/
+# data/
+# models/checkpoints/
 
 # Weights & Biases
 wandb/
