@@ -5,10 +5,10 @@
 set -e
 
 # Activate virtual environment if not already activated
-# if [[ -z "$VIRTUAL_ENV" ]]; then
-#     echo "Activating virtual environment..."
-#     source venv/bin/activate
-# fi
+if [[ -z "$VIRTUAL_ENV" ]]; then
+    echo "Activating virtual environment..."
+    source venv/bin/activate
+fi
 
 echo "================================================"
 echo "Step 1: Downloading datasets..."
