@@ -126,7 +126,7 @@ nvidia-smi
 
 ```bash
 cd ~
-git clone https://github.com/YOUR-USERNAME/persuasion-rl.git
+git clone https://github.com/koachang/persuasion-rl.git
 cd persuasion-rl
 bash scripts/setup_env.sh
 source venv/bin/activate
