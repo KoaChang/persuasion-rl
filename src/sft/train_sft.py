@@ -182,7 +182,7 @@ def main():
         save_steps=training_config.get("save_steps", 500),
         eval_steps=training_config.get("eval_steps", 500),
         save_total_limit=training_config.get("save_total_limit", 3),
-        evaluation_strategy="steps",
+        eval_strategy="steps",
         save_strategy="steps",
         load_best_model_at_end=True,
         metric_for_best_model="eval_loss",
