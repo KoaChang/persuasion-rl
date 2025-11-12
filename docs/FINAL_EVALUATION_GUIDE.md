@@ -20,16 +20,13 @@ During preference generation, the system automatically saves **~1,700 prompts** 
 ```
 Total data: 50,000 examples
 ├─ Training: 40,000 (80%) → Used for SFT training
-├─ Validation: 5,000 (10%)
-│   ├─ ~5,000 → Used for RLAIF preference generation
-│   └─ ~0 remaining
-└─ Test: 5,000 (10%)
+└─ Val + Test: 10,000 (20%) → Shuffled together, then split:
+    ├─ 8,000 → Used for RLAIF preference generation
     ├─ 300 → Used for RLHF preference generation
-    ├─ ~3,000 → Used for RLAIF preference generation
-    └─ ~1,700 → HELD OUT for final evaluation ⭐
+    └─ 1,700 → HELD OUT for final evaluation ⭐
 ```
 
-**Note**: Val + Test are shuffled together before splitting into pools, so the 1,700 held-out prompts are a random mix from both.
+**Note**: Val (5k) + Test (5k) are shuffled together before splitting into pools, so the 1,700 held-out prompts are a random mix from both splits.
 
 ## Why This Matters
 

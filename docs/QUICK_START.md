@@ -10,7 +10,7 @@ This guide gets you from zero to training in 30 minutes.
 
 **Cost**: ~$8-16
 
-**Dataset Size**: 30,000-60,000 SFT examples (recommended: 50,000)
+**Dataset Size**: 50,000 total examples from CMV (40,000 SFT training, 8,000 RLAIF, 300 RLHF, 1,700 eval)
 
 ## Prerequisites Checklist
 
@@ -34,6 +34,7 @@ Follow **[AWS_SETUP_GUIDE.md](AWS_SETUP_GUIDE.md)** to:
 5. Connect via SSH
 
 **Key decisions**:
+
 - **Instance**: g5.xlarge ($1/hour, recommended) or g4dn.xlarge ($0.50/hour, slower)
 - **Storage**: 100GB
 - **Region**: us-east-1 (usually cheapest)
@@ -59,6 +60,7 @@ bash scripts/run_sft_aws.sh
 ```
 
 This single command will:
+
 1. Download CMV and PersuasionForGood datasets
 2. Preprocess both datasets
 3. Create SFT training set
@@ -83,6 +85,7 @@ scp -i ~/.ssh/persuasion-rl-key.pem -r \
 ```
 
 **Then STOP the instance** (in AWS Console):
+
 - EC2 → Instances → Select your instance → Instance state → Stop
 
 ## What You'll Get
@@ -90,11 +93,12 @@ scp -i ~/.ssh/persuasion-rl-key.pem -r \
 After completion:
 
 ✅ **Trained SFT Model**: Qwen2.5-0.5B + LoRA adapters  
-✅ **Training Data**: 30k-60k persuasion examples (train/val/test splits)  
-✅ **AI Preference Pool**: 10,000 prompts × 2 responses (for RLAIF)  
+✅ **Training Data**: 50,000 CMV examples (40,000 train / 5,000 val / 5,000 test)  
+✅ **AI Preference Pool**: 8,000 prompts × 2 responses (for RLAIF)  
 ✅ **Human Preference Pool**: 300 prompts × 2 responses (for RLHF)  
+✅ **Held-out Eval Set**: 1,700 prompts for final unbiased evaluation  
 ✅ **Training Metrics**: Loss curves, GPU utilization in W&B  
-✅ **Evaluation Samples**: Model outputs on test set  
+✅ **Evaluation Samples**: Model outputs on test set
 
 ## Key Configuration
 
@@ -109,43 +113,56 @@ batch_size: 64 (effective)
 max_seq_length: 1024
 ```
 
-## Recommended Dataset Size
+## Default Dataset Configuration
 
-Based on your RL plan (300 RLHF, 10k RLAIF):
+**50,000 total examples from CMV dataset:**
 
-**Target: 50,000 SFT examples**
+- **40,000** (80%) → SFT training
+- **5,000** (10%) → SFT validation
+- **5,000** (10%) → SFT test
 
-This gives you:
-- 160x your RLHF data
-- 5x your RLAIF data
-- Strong foundation for RL improvements
+**Preference generation from val+test (10,000 prompts):**
 
-See **[SFT_DATASET_SIZE_ANALYSIS.md](SFT_DATASET_SIZE_ANALYSIS.md)** for detailed analysis.
+- **8,000** prompts → RLAIF pool (AI-graded preferences)
+- **300** prompts → RLHF pool (human-graded preferences)
+- **1,700** prompts → Held-out for final evaluation
+
+**Ratios:**
+
+- SFT:RLAIF = 50k:8k = 6.25x (optimal 5-10x)
+- SFT:RLHF = 50k:300 = 166x (optimal 100-200x)
+
+See **[DATASET_SIZES_SUMMARY.md](DATASET_SIZES_SUMMARY.md)** for detailed analysis.
 
 ## Common Issues
 
 ### GPU quota denied
+
 **Solution**: Wait for approval (15min-24hrs) or try g4dn.xlarge
 
 ### Out of memory during training
+
 **Solution**: Reduce batch size or use `--use-4bit` flag
 
 ### Training too slow
+
 **Solution**: Verify GPU usage with `nvidia-smi`, ensure fp16=true
 
 ### Can't SSH into instance
+
 **Solution**: Check key permissions (chmod 400), verify security group allows SSH from your IP
 
 ## Cost Breakdown
 
-| Item | Cost |
-|------|------|
-| g5.xlarge (12 hours) | ~$12 |
-| Storage (100GB, 1 week) | ~$2.50 |
-| Data transfer | ~$0.20 |
-| **Total** | **~$15** |
+| Item                    | Cost     |
+| ----------------------- | -------- |
+| g5.xlarge (12 hours)    | ~$12     |
+| Storage (100GB, 1 week) | ~$2.50   |
+| Data transfer           | ~$0.20   |
+| **Total**               | **~$15** |
 
-**Save money**: 
+**Save money**:
+
 - Use g4dn.xlarge instead (~$10 total)
 - Reduce dataset to 30k examples (~$8 total)
 - Terminate (not just stop) when done
@@ -192,4 +209,3 @@ EC2 → Instances → Stop
 ---
 
 **Ready to start? Go to [AWS_SETUP_GUIDE.md](AWS_SETUP_GUIDE.md)!**
-

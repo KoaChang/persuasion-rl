@@ -1,14 +1,16 @@
 # Dataset Sizes Summary
 
-## Updated Configuration (50k SFT)
+## Default Configuration (50k Total)
 
 ### Overview
 
-After analysis of available data and RL requirements, the default configuration has been updated to:
+After analysis of available data and RL requirements, the default configuration is:
 
-**SFT Training**: 50,000 examples from CMV  
+**Total Examples**: 50,000 from CMV dataset  
+**SFT Training**: 40,000 (80% of total)  
 **RLAIF Pool**: 8,000 prompts (from val + test)  
-**RLHF Pool**: 300 prompts (from test)
+**RLHF Pool**: 300 prompts (from test)  
+**Held-out Eval**: 1,700 prompts (final evaluation)
 
 ## Breakdown
 
@@ -28,11 +30,11 @@ After analysis of available data and RL requirements, the default configuration 
 | ------------- | ----- | ----------------------- | -------------------------------- |
 | **RLAIF**     | 8,000 | Val (5k) + Test (3k)    | AI-graded preferences for DPO    |
 | **RLHF**      | 300   | Test (~300)             | Human-graded preferences for DPO |
-| **Final Eval**| ~1,700| Val + Test (remaining)  | Held-out for unbiased evaluation ⭐ |
+| **Final Eval**| 1,700 | Val + Test (remaining)  | Held-out for unbiased evaluation ⭐ |
 
 **Note**: Each prompt gets 2 responses from SFT model (different random seeds)
 
-**⭐ Final Eval Set**: These ~1,700 prompts are NEVER used for preference generation or training - they're completely held-out for unbiased final evaluation of all models.
+**⭐ Final Eval Set**: These 1,700 prompts are NEVER used for preference generation or training - they're completely held-out for unbiased final evaluation of all models.
 
 ## Key Ratios
 
@@ -117,12 +119,12 @@ Preprocessing & Filtering
             ↓
     Val + Test shuffled together (10,000 prompts)
             ↓
-            ├── 300 prompts → RLHF pool
             ├── 8,000 prompts → RLAIF pool
-            └── ~1,700 prompts → Final Eval (held-out) ⭐
+            ├── 300 prompts → RLHF pool
+            └── 1,700 prompts → Final Eval (held-out) ⭐
 ```
 
-**⭐ Key Feature**: The ~1,700 held-out prompts ensure unbiased final evaluation across all models!
+**⭐ Key Feature**: The 1,700 held-out prompts ensure unbiased final evaluation across all models!
 
 ## Cost Breakdown
 

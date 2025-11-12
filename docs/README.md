@@ -14,7 +14,7 @@ This folder contains comprehensive documentation for the Persuasion-RL SFT proje
 
 **Before training**, read these:
 
-- **[SFT_DATASET_SIZE_ANALYSIS.md](SFT_DATASET_SIZE_ANALYSIS.md)** - How to size your SFT dataset (30k-60k recommended)
+- **[DATASET_SIZES_SUMMARY.md](DATASET_SIZES_SUMMARY.md)** - Default configuration: 50k total (40k SFT, 8k RLAIF, 300 RLHF, 1.7k eval)
 - **[TODO.md](TODO.md)** - Project roadmap and next phases
 
 ## Reference
@@ -29,7 +29,7 @@ This folder contains comprehensive documentation for the Persuasion-RL SFT proje
 |----------|---------|--------------|
 | [QUICK_START.md](QUICK_START.md) | Fast path to training | 5 min |
 | [AWS_SETUP_GUIDE.md](AWS_SETUP_GUIDE.md) | Complete AWS walkthrough | 20 min |
-| [SFT_DATASET_SIZE_ANALYSIS.md](SFT_DATASET_SIZE_ANALYSIS.md) | Dataset sizing recommendations | 10 min |
+| [DATASET_SIZES_SUMMARY.md](DATASET_SIZES_SUMMARY.md) | Default configuration & ratios | 10 min |
 | [EXECUTION_GUIDE.md](EXECUTION_GUIDE.md) | Detailed execution steps | 15 min |
 | [TODO.md](TODO.md) | Progress & future work | 5 min |
 | [IMPLEMENTATION_COMPLETE.md](IMPLEMENTATION_COMPLETE.md) | Implementation summary | 10 min |
@@ -55,14 +55,15 @@ Perfect for: First-time users who want to start immediately.
 
 Perfect for: Users with no AWS experience.
 
-### SFT_DATASET_SIZE_ANALYSIS.md
-**Dataset sizing guide** - Analyzes optimal SFT training set size:
-- Why 30k-60k examples? (based on your 300 RLHF, 10k RLAIF)
-- Ratios from research (30-100x RLHF, 3-10x RLAIF)
-- Cost vs. quality tradeoffs
-- What to do if you have too much or too little data
+### DATASET_SIZES_SUMMARY.md
+**Dataset configuration guide** - Default setup and ratios:
+- 50,000 total examples: 40k SFT, 8k RLAIF, 300 RLHF, 1.7k eval
+- Ratios: 6.25x RLAIF, 166x RLHF (optimal ranges)
+- Cost breakdown (~$100-145 total project)
+- Alternative configurations (30k budget, 100k maximum)
+- Data flow and verification steps
 
-Perfect for: Understanding the "why" behind dataset decisions.
+Perfect for: Understanding the default configuration and alternatives.
 
 ### EXECUTION_GUIDE.md
 **Detailed execution manual** - Step-by-step commands with explanations:
@@ -98,7 +99,7 @@ Perfect for: Understanding the codebase and deliverables.
 **If you want to...**
 - **Start training now**: → [QUICK_START.md](QUICK_START.md)
 - **Learn AWS from scratch**: → [AWS_SETUP_GUIDE.md](AWS_SETUP_GUIDE.md)
-- **Understand dataset sizing**: → [SFT_DATASET_SIZE_ANALYSIS.md](SFT_DATASET_SIZE_ANALYSIS.md)
+- **Understand dataset sizing**: → [DATASET_SIZES_SUMMARY.md](DATASET_SIZES_SUMMARY.md)
 - **See detailed commands**: → [EXECUTION_GUIDE.md](EXECUTION_GUIDE.md)
 - **Check what's next**: → [TODO.md](TODO.md)
 - **Review what's built**: → [IMPLEMENTATION_COMPLETE.md](IMPLEMENTATION_COMPLETE.md)

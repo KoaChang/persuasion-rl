@@ -2,7 +2,7 @@
 
 This repository contains the Supervised Fine-Tuning (SFT) phase of a persuasion-focused reinforcement learning project. The goal is to train Qwen2.5-0.5B on persuasion dialogues from CMV (ChangeMyView) and generate preference data for future RLHF/RLAIF training.
 
-**Default Configuration**: 50,000 examples from CMV dataset only (PersuasionForGood disabled by default).
+**Default Configuration**: 50,000 total examples from CMV dataset (40,000 SFT, 8,000 RLAIF, 300 RLHF, 1,700 eval). PersuasionForGood disabled by default.
 
 ## Project Overview
 
@@ -16,10 +16,11 @@ This project implements the SFT portion of a larger system that will eventually 
 ### Current Phase: SFT Training
 
 - Train Qwen2.5-0.5B with LoRA on CMV (ChangeMyView) dataset
-- Default: 50,000 training examples (configurable: 30k-100k)
+- Default: 50,000 total examples → 40,000 SFT training (configurable: 30k-100k)
 - Generate preference data (2 responses per prompt) for future RLHF/RLAIF stages
   - RLAIF: 8,000 prompts (from val + test sets)
   - RLHF: 300 prompts (from test set)
+  - Held-out eval: 1,700 prompts for final unbiased evaluation
 - PersuasionForGood dataset code available but disabled by default
 
 ## Repository Structure
@@ -202,8 +203,9 @@ python src/sft/generate_preferences.py \
 
 This generates:
 
-- **AI pool**: 8,000 prompts with 2 responses each (from val + test sets, for RLAIF)
-- **Human pool**: 300 prompts with 2 responses each (from test set, for RLHF)
+- **RLAIF pool**: 8,000 prompts with 2 responses each (from val + test sets)
+- **RLHF pool**: 300 prompts with 2 responses each (from test set)
+- **Held-out eval**: 1,700 prompts for final unbiased evaluation ⭐
 
 Output files:
 
@@ -211,7 +213,7 @@ Output files:
 - `data/preferences/ai_pool_responses.jsonl` - 8,000 × 2 responses
 - `data/preferences/human_pool_prompts.jsonl` - 300 prompts for RLHF
 - `data/preferences/human_pool_responses.jsonl` - 300 × 2 responses
-- `data/preferences/final_eval_prompts.jsonl` - ~1,700 held-out prompts for final evaluation ⭐
+- `data/preferences/final_eval_prompts.jsonl` - 1,700 held-out prompts for final evaluation ⭐
 
 #### 7. Evaluate Model
 
@@ -243,19 +245,20 @@ Key parameters:
 
 - `preprocessing.min_tokens`: Minimum response length (20)
 - `preprocessing.max_tokens`: Maximum response length (1024)
-- `preference_generation.ai_pool_size`: AI pool size (10,000)
+- `preference_generation.ai_pool_size`: AI pool size (8,000)
 - `preference_generation.human_pool_size`: Human pool size (300)
 
 ## Dataset Configuration
 
 **Current Setup (Default)**:
 - **Source**: CMV (ChangeMyView) only
-- **Size**: 50,000 examples
-- **Splits**: 40k train / 5k val / 5k test
-- **Preference Data**:
-  - RLAIF: 8,000 prompts (from val + test sets)
-  - RLHF: 300 prompts (from test set)
-- **Rationale**: 160x RLHF data (300), 6.25x RLAIF data (8k)
+- **Total**: 50,000 examples from CMV
+- **SFT Splits**: 40k train (80%) / 5k val (10%) / 5k test (10%)
+- **Preference Data** (from val+test):
+  - RLAIF: 8,000 prompts (AI-graded preferences)
+  - RLHF: 300 prompts (human-graded preferences)
+  - Held-out eval: 1,700 prompts (final unbiased evaluation)
+- **Ratios**: SFT:RLAIF = 6.25x (optimal), SFT:RLHF = 166x (optimal)
 
 To use different configuration:
 ```bash
@@ -365,7 +368,7 @@ If model loading fails:
 Comprehensive guides are available in the `docs/` folder:
 
 - **[AWS_SETUP_GUIDE.md](docs/AWS_SETUP_GUIDE.md)** - Complete AWS setup walkthrough (account creation to first training run)
-- **[DATASET_SIZES_SUMMARY.md](docs/DATASET_SIZES_SUMMARY.md)** - Updated configuration: 50k SFT, 8k RLAIF, 300 RLHF
+- **[DATASET_SIZES_SUMMARY.md](docs/DATASET_SIZES_SUMMARY.md)** - Default configuration: 50k total (40k SFT, 8k RLAIF, 300 RLHF, 1.7k eval)
 - **[FINAL_EVALUATION_GUIDE.md](docs/FINAL_EVALUATION_GUIDE.md)** - How to use the held-out test set for unbiased evaluation (NEW)
 - **[CMV_ONLY_CONFIGURATION.md](docs/CMV_ONLY_CONFIGURATION.md)** - Why CMV-only and how to customize
 - **[EXECUTION_GUIDE.md](docs/EXECUTION_GUIDE.md)** - Step-by-step execution instructions
