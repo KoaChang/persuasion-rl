@@ -158,6 +158,10 @@ def main():
         task_type=config["lora"].get("task_type", "CAUSAL_LM"),
     )
     model = get_peft_model(model, lora_config)
+    
+    # Enable input gradients for gradient checkpointing compatibility with LoRA
+    model.enable_input_require_grads()
+    
     print_trainable_parameters(model)
     
     # Load datasets
