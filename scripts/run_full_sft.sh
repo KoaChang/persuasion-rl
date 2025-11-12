@@ -97,3 +97,82 @@ echo "Model saved to: models/checkpoints/qwen-sft/final"
 echo "Preference data saved to: data/preferences/"
 echo ""
 
+# ================================================
+# Create Backups
+# ================================================
+echo ""
+echo "================================================"
+echo "Creating backups..."
+echo "================================================"
+echo ""
+
+# Create timestamped backup names
+BACKUP_DATE=$(date +%Y%m%d_%H%M%S)
+SFT_BACKUP_NAME="sft_training_backup_${BACKUP_DATE}"
+PREFERENCES_BACKUP_NAME="preferences_backup_${BACKUP_DATE}"
+
+# Backup 1: SFT Training Results (model + configs + wandb logs)
+echo "Creating SFT training backup..."
+if [ -d "models/checkpoints/qwen-sft" ]; then
+    tar -czf ${SFT_BACKUP_NAME}.tar.gz \
+      models/checkpoints/qwen-sft/ \
+      configs/sft_config.yaml \
+      data/processed/sft_train.jsonl \
+      data/processed/sft_val.jsonl \
+      data/processed/sft_test.jsonl \
+      data/processed/final_eval_reserved.jsonl \
+      wandb/ \
+      --exclude="*.pyc" \
+      --exclude="__pycache__" \
+      2>/dev/null || \
+    tar -czf ${SFT_BACKUP_NAME}.tar.gz \
+      models/checkpoints/qwen-sft/ \
+      configs/sft_config.yaml \
+      data/processed/sft_train.jsonl \
+      data/processed/sft_val.jsonl \
+      data/processed/sft_test.jsonl \
+      data/processed/final_eval_reserved.jsonl
+    
+    SFT_SIZE=$(ls -lh ${SFT_BACKUP_NAME}.tar.gz | awk '{print $5}')
+    echo "✓ SFT training backup created: ${SFT_BACKUP_NAME}.tar.gz (${SFT_SIZE})"
+else
+    echo "⚠ Warning: SFT model directory not found, skipping SFT backup"
+fi
+
+echo ""
+
+# Backup 2: Preference Data Generation Results
+echo "Creating preference data backup..."
+if [ -d "data/preferences" ]; then
+    tar -czf ${PREFERENCES_BACKUP_NAME}.tar.gz \
+      data/preferences/ \
+      2>/dev/null
+    
+    PREF_SIZE=$(ls -lh ${PREFERENCES_BACKUP_NAME}.tar.gz | awk '{print $5}')
+    echo "✓ Preference data backup created: ${PREFERENCES_BACKUP_NAME}.tar.gz (${PREF_SIZE})"
+else
+    echo "⚠ Warning: Preference data directory not found, skipping preferences backup"
+fi
+
+echo ""
+echo "================================================"
+echo "Backups Complete!"
+echo "================================================"
+echo ""
+echo "Backup files created:"
+echo "  1. ${SFT_BACKUP_NAME}.tar.gz"
+echo "  2. ${PREFERENCES_BACKUP_NAME}.tar.gz"
+echo ""
+echo "To transfer backups to your local MacBook Desktop, run these commands"
+echo "on your LOCAL machine (not on AWS):"
+echo ""
+echo "================================================"
+echo "# Replace YOUR_KEY.pem with your SSH key path"
+echo "# Replace YOUR_AWS_IP with your AWS instance IP"
+echo ""
+echo "scp -i ~/.ssh/YOUR_KEY.pem ubuntu@YOUR_AWS_IP:~/persuasion-rl/${SFT_BACKUP_NAME}.tar.gz ~/Desktop/"
+echo ""
+echo "scp -i ~/.ssh/YOUR_KEY.pem ubuntu@YOUR_AWS_IP:~/persuasion-rl/${PREFERENCES_BACKUP_NAME}.tar.gz ~/Desktop/"
+echo "================================================"
+echo ""
+
