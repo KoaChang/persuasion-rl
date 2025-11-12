@@ -8,7 +8,7 @@ preprocessing:
 datasets:
   use_cmv: true  # Use CMV (ChangeMyView) dataset
   use_p4g: false  # Use PersuasionForGood dataset (set to false to skip)
-  max_examples: 50000  # Maximum total examples (null for no limit)
+  max_examples: 11750  # Maximum total examples (null for no limit)
 
 splits:
   train_ratio: 0.8
@@ -22,8 +22,8 @@ paths:
   preferences_dir: "data/preferences"
 
 preference_generation:
-  ai_pool_size: 8000  # Number of prompts for AI-graded preferences (uses val + test)
-  human_pool_size: 300  # Number of prompts for human-graded preferences (from test)
+  ai_pool_size: 2150  # Number of prompts for AI-graded preferences (uses val + test)
+  human_pool_size: 200  # Number of prompts for human-graded preferences (from test)
   use_val_set: true  # Use validation set for preference generation
   temperature: 0.7
   top_p: 0.9

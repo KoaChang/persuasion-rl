@@ -14,7 +14,7 @@ This folder contains comprehensive documentation for the Persuasion-RL SFT proje
 
 **Before training**, read these:
 
-- **[DATASET_SIZES_SUMMARY.md](DATASET_SIZES_SUMMARY.md)** - Default configuration: 50k total (40k SFT, 8k RLAIF, 300 RLHF, 1.7k eval)
+- **[DATASET_SIZES_SUMMARY.md](DATASET_SIZES_SUMMARY.md)** - Default configuration: 11.75k total (9.4k SFT, 2.15k RLAIF, 200 RLHF, 115 final eval)
 - **[TODO.md](TODO.md)** - Project roadmap and next phases
 
 ## Reference
@@ -57,10 +57,10 @@ Perfect for: Users with no AWS experience.
 
 ### DATASET_SIZES_SUMMARY.md
 **Dataset configuration guide** - Default setup and ratios:
-- 50,000 total examples: 40k SFT, 8k RLAIF, 300 RLHF, 1.7k eval
-- Ratios: 6.25x RLAIF, 166x RLHF (optimal ranges)
-- Cost breakdown (~$100-145 total project)
-- Alternative configurations (30k budget, 100k maximum)
+- 11,750 total examples: 9.4k SFT, 2.15k RLAIF, 200 RLHF, 115 final eval
+- Ratios: 4.37x RLAIF, 47x RLHF, 10.75x RLAIF:RLHF (good ranges)
+- Cost breakdown (~$28-42 total project)
+- Alternative configurations (more RLHF focus, maximum available)
 - Data flow and verification steps
 
 Perfect for: Understanding the default configuration and alternatives.

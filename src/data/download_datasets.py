@@ -12,12 +12,12 @@ def download_cmv(output_dir: Path):
     """Download the Winning Arguments (CMV) corpus from ConvoKit."""
     print("Downloading CMV (Winning Arguments) corpus...")
     try:
-        cmv_corpus = Corpus(download("winning-arguments-corpus"))
+        cmv_corpus = Corpus(download("winning-args-corpus"))
         
         # Save the corpus to disk
         cmv_path = output_dir / "cmv"
         cmv_path.mkdir(parents=True, exist_ok=True)
-        cmv_corpus.dump("winning-arguments-corpus", str(cmv_path))
+        cmv_corpus.dump("winning-args-corpus", str(cmv_path))
         
         print(f"✓ CMV corpus downloaded to {cmv_path}")
         print(f"  Total conversations: {len(list(cmv_corpus.iter_conversations()))}")

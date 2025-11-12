@@ -2,7 +2,7 @@
 
 This repository contains the Supervised Fine-Tuning (SFT) phase of a persuasion-focused reinforcement learning project. The goal is to train Qwen2.5-0.5B on persuasion dialogues from CMV (ChangeMyView) and generate preference data for future RLHF/RLAIF training.
 
-**Default Configuration**: 50,000 total examples from CMV dataset (40,000 SFT, 8,000 RLAIF, 300 RLHF, 1,700 eval). PersuasionForGood disabled by default.
+**Default Configuration**: 11,750 total examples from CMV dataset (9,400 SFT, 2,150 RLAIF, 200 RLHF, 115 final eval). PersuasionForGood disabled by default.
 
 ## Project Overview
 
@@ -16,11 +16,11 @@ This project implements the SFT portion of a larger system that will eventually 
 ### Current Phase: SFT Training
 
 - Train Qwen2.5-0.5B with LoRA on CMV (ChangeMyView) dataset
-- Default: 50,000 total examples → 40,000 SFT training (configurable: 30k-100k)
+- Default: 11,750 total examples → 9,400 SFT training (based on available CMV data: 11,865 examples)
 - Generate preference data (2 responses per prompt) for future RLHF/RLAIF stages
-  - RLAIF: 8,000 prompts (from val + test sets)
-  - RLHF: 300 prompts (from test set)
-  - Held-out eval: 1,700 prompts for final unbiased evaluation
+  - RLAIF: 2,150 prompts (91.5% of val + test sets)
+  - RLHF: 200 prompts (8.5% of val + test sets)
+  - Final eval: 115 examples held out completely (from 11,865 - 11,750 reserve)
 - PersuasionForGood dataset code available but disabled by default
 
 ## Repository Structure
@@ -139,26 +139,26 @@ python src/data/preprocess_persuasionforgood.py \
 
 #### 4. Create SFT Dataset
 
-**Default: 50k examples from CMV only** (PersuasionForGood disabled due to quality concerns)
+**Default: 11.75k examples from CMV only** (PersuasionForGood disabled due to quality concerns)
 
 ```bash
 python src/data/create_sft_dataset.py \
     --cmv-file data/processed/cmv_examples.jsonl \
     --use-cmv \
-    --max-examples 50000 \
+    --max-examples 11750 \
     --output-dir data/processed
 ```
 
 To use different size:
 ```bash
-# Use 30k examples (faster, cheaper)
-python src/data/create_sft_dataset.py --use-cmv --max-examples 30000
+# Use 10k examples (conservative)
+python src/data/create_sft_dataset.py --use-cmv --max-examples 10000
 
-# Use 100k examples (maximum quality)
-python src/data/create_sft_dataset.py --use-cmv --max-examples 100000
+# Use all available (11,865 examples - maximum available)
+python src/data/create_sft_dataset.py --use-cmv --max-examples 11865
 
-# Use both CMV and P4G
-python src/data/create_sft_dataset.py --use-cmv --use-p4g --max-examples 50000
+# Use both CMV and P4G (if P4G is downloaded)
+python src/data/create_sft_dataset.py --use-cmv --use-p4g --max-examples 11750
 ```
 
 This creates:
@@ -197,23 +197,23 @@ python src/sft/generate_preferences.py \
     --val-file data/processed/sft_val.jsonl \
     --use-val-set \
     --output-dir data/preferences \
-    --ai-pool-size 8000 \
-    --human-pool-size 300
+    --ai-pool-size 2150 \
+    --human-pool-size 200
 ```
 
 This generates:
 
-- **RLAIF pool**: 8,000 prompts with 2 responses each (from val + test sets)
-- **RLHF pool**: 300 prompts with 2 responses each (from test set)
-- **Held-out eval**: 1,700 prompts for final unbiased evaluation ⭐
+- **RLAIF pool**: 2,150 prompts with 2 responses each (91.5% of val + test sets)
+- **RLHF pool**: 200 prompts with 2 responses each (8.5% of val + test sets)
+- **Final eval**: 115 examples completely held-out (from 11,865 - 11,750 reserve) 🔒
 
 Output files:
 
-- `data/preferences/ai_pool_prompts.jsonl` - 8,000 prompts for RLAIF
-- `data/preferences/ai_pool_responses.jsonl` - 8,000 × 2 responses
-- `data/preferences/human_pool_prompts.jsonl` - 300 prompts for RLHF
-- `data/preferences/human_pool_responses.jsonl` - 300 × 2 responses
-- `data/preferences/final_eval_prompts.jsonl` - 1,700 held-out prompts for final evaluation ⭐
+- `data/preferences/ai_pool_prompts.jsonl` - 2,150 prompts for RLAIF
+- `data/preferences/ai_pool_responses.jsonl` - 2,150 × 2 responses
+- `data/preferences/human_pool_prompts.jsonl` - 200 prompts for RLHF
+- `data/preferences/human_pool_responses.jsonl` - 200 × 2 responses
+- **Note**: Final eval set (115 examples) kept separate from training pipeline 🔒
 
 #### 7. Evaluate Model
 
@@ -245,30 +245,31 @@ Key parameters:
 
 - `preprocessing.min_tokens`: Minimum response length (20)
 - `preprocessing.max_tokens`: Maximum response length (1024)
-- `preference_generation.ai_pool_size`: AI pool size (8,000)
-- `preference_generation.human_pool_size`: Human pool size (300)
+- `preference_generation.ai_pool_size`: AI pool size (2,150)
+- `preference_generation.human_pool_size`: Human pool size (200)
 
 ## Dataset Configuration
 
 **Current Setup (Default)**:
 - **Source**: CMV (ChangeMyView) only
-- **Total**: 50,000 examples from CMV
-- **SFT Splits**: 40k train (80%) / 5k val (10%) / 5k test (10%)
-- **Preference Data** (from val+test):
-  - RLAIF: 8,000 prompts (AI-graded preferences)
-  - RLHF: 300 prompts (human-graded preferences)
-  - Held-out eval: 1,700 prompts (final unbiased evaluation)
-- **Ratios**: SFT:RLAIF = 6.25x (optimal), SFT:RLHF = 166x (optimal)
+- **Available**: 11,865 CMV delta-winning examples
+- **Total Used**: 11,750 examples (115 reserved for final evaluation)
+- **SFT Splits**: 9.4k train (80%) / 1.175k val (10%) / 1.175k test (10%)
+- **Preference Data** (from all val+test, 2,350 total):
+  - RLAIF: 2,150 prompts (91.5% - AI-graded preferences)
+  - RLHF: 200 prompts (8.5% - human-graded preferences)
+  - Final eval: 115 examples (completely held-out from reserve) 🔒
+- **Ratios**: SFT:RLAIF = 4.37x (good), SFT:RLHF = 47x (reasonable), RLAIF:RLHF = 10.75x (excellent)
 
 To use different configuration:
 ```bash
-# 30k examples (faster, cheaper)
-python src/data/create_sft_dataset.py --max-examples 30000
+# 10k examples (conservative)
+python src/data/create_sft_dataset.py --max-examples 10000
 
-# 100k examples (maximum quality)
-python src/data/create_sft_dataset.py --max-examples 100000
+# All available (11,865 examples - maximum)
+python src/data/create_sft_dataset.py --max-examples 11865
 
-# Re-enable PersuasionForGood
+# Re-enable PersuasionForGood (if downloaded)
 python src/data/create_sft_dataset.py --use-cmv --use-p4g
 ```
 
@@ -368,7 +369,7 @@ If model loading fails:
 Comprehensive guides are available in the `docs/` folder:
 
 - **[AWS_SETUP_GUIDE.md](docs/AWS_SETUP_GUIDE.md)** - Complete AWS setup walkthrough (account creation to first training run)
-- **[DATASET_SIZES_SUMMARY.md](docs/DATASET_SIZES_SUMMARY.md)** - Default configuration: 50k total (40k SFT, 8k RLAIF, 300 RLHF, 1.7k eval)
+- **[DATASET_SIZES_SUMMARY.md](docs/DATASET_SIZES_SUMMARY.md)** - Default configuration: 11.75k total (9.4k SFT, 2.15k RLAIF, 200 RLHF, 115 final eval)
 - **[FINAL_EVALUATION_GUIDE.md](docs/FINAL_EVALUATION_GUIDE.md)** - How to use the held-out test set for unbiased evaluation (NEW)
 - **[CMV_ONLY_CONFIGURATION.md](docs/CMV_ONLY_CONFIGURATION.md)** - Why CMV-only and how to customize
 - **[EXECUTION_GUIDE.md](docs/EXECUTION_GUIDE.md)** - Step-by-step execution instructions
@@ -384,7 +385,7 @@ After completing SFT, the next phases are:
    - Train DPO on AI preferences starting from SFT model
 
 2. **RLHF Stage**:
-   - Collect human labels for human pool (300 prompts)
+   - Collect human labels for human pool (200 prompts)
    - Train two DPO variants:
      - RLHF-only: SFT + human DPO
      - RLAIF→RLHF: RLAIF + human DPO

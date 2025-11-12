@@ -36,12 +36,18 @@ def extract_delta_winning_examples(
     print("Processing CMV conversations...")
     for conversation in corpus.iter_conversations():
         # Get all utterances in chronological order
-        utterances = list(conversation.get_chronological_utterance_list())
+        # Handle cases where timestamps might be None
+        try:
+            utterances = list(conversation.get_chronological_utterance_list())
+        except ValueError:
+            # If timestamp sorting fails, just get all utterances
+            utterances = list(conversation.iter_utterances())
         
         # Find delta-winning comments
         for utt in utterances:
             # Check if this utterance won a delta
-            if hasattr(utt.meta, 'success') and utt.meta['success'] == True:
+            # success field is 1 for delta-winning comments, None or 0 otherwise
+            if utt.meta.get('success') == 1:
                 response_text = utt.text.strip()
                 
                 # Filter by response length
@@ -52,9 +58,14 @@ def extract_delta_winning_examples(
                 # Build context: original post + reply chain leading to this comment
                 context_parts = []
                 
-                # Add original post (root)
-                root = conversation.get_root_utterances()[0]
-                if root.text:
+                # Add original post (root) - find utterance with no reply_to
+                root = None
+                for u in utterances:
+                    if u.reply_to is None:
+                        root = u
+                        break
+                
+                if root and root.text:
                     context_parts.append(f"Original Post: {root.text.strip()}")
                 
                 # Add parent comments in the reply chain
@@ -147,7 +158,7 @@ def main():
     output_file.parent.mkdir(parents=True, exist_ok=True)
     
     print(f"Loading CMV corpus from {input_dir}...")
-    corpus = Corpus(filename=str(input_dir / "winning-arguments-corpus"))
+    corpus = Corpus(filename=str(input_dir / "winning-args-corpus"))
     
     print(f"Loading tokenizer: {args.model_name}...")
     tokenizer = AutoTokenizer.from_pretrained(args.model_name)

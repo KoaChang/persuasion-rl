@@ -6,11 +6,11 @@ This guide gets you from zero to training in 30 minutes.
 
 **Goal**: Train Qwen2.5-0.5B on persuasion data using AWS GPU
 
-**Time**: 8-15 hours of training (mostly hands-off)
+**Time**: 4-6 hours of training (mostly hands-off)
 
-**Cost**: ~$8-16
+**Cost**: ~$4-6
 
-**Dataset Size**: 50,000 total examples from CMV (40,000 SFT training, 8,000 RLAIF, 300 RLHF, 1,700 eval)
+**Dataset Size**: 11,750 total examples from CMV (9,400 SFT training, 2,150 RLAIF, 200 RLHF, 115 final eval)
 
 ## Prerequisites Checklist
 
@@ -93,10 +93,10 @@ scp -i ~/.ssh/persuasion-rl-key.pem -r \
 After completion:
 
 ✅ **Trained SFT Model**: Qwen2.5-0.5B + LoRA adapters  
-✅ **Training Data**: 50,000 CMV examples (40,000 train / 5,000 val / 5,000 test)  
-✅ **AI Preference Pool**: 8,000 prompts × 2 responses (for RLAIF)  
-✅ **Human Preference Pool**: 300 prompts × 2 responses (for RLHF)  
-✅ **Held-out Eval Set**: 1,700 prompts for final unbiased evaluation  
+✅ **Training Data**: 11,750 CMV examples (9,400 train / 1,175 val / 1,175 test)  
+✅ **AI Preference Pool**: 2,150 prompts × 2 responses (for RLAIF)  
+✅ **Human Preference Pool**: 200 prompts × 2 responses (for RLHF)  
+✅ **Final Eval Set**: 115 prompts (completely held-out)  
 ✅ **Training Metrics**: Loss curves, GPU utilization in W&B  
 ✅ **Evaluation Samples**: Model outputs on test set
 
@@ -115,22 +115,25 @@ max_seq_length: 1024
 
 ## Default Dataset Configuration
 
-**50,000 total examples from CMV dataset:**
+**11,750 total examples from CMV dataset:**
 
-- **40,000** (80%) → SFT training
-- **5,000** (10%) → SFT validation
-- **5,000** (10%) → SFT test
+- **9,400** (80%) → SFT training
+- **1,175** (10%) → SFT validation
+- **1,175** (10%) → SFT test
 
-**Preference generation from val+test (10,000 prompts):**
+**Preference generation from val+test (2,350 prompts):**
 
-- **8,000** prompts → RLAIF pool (AI-graded preferences)
-- **300** prompts → RLHF pool (human-graded preferences)
-- **1,700** prompts → Held-out for final evaluation
+- **2,150** prompts → RLAIF pool (AI-graded preferences) - 91.5%
+- **200** prompts → RLHF pool (human-graded preferences) - 8.5%
+
+**Final evaluation:**
+- **115** prompts → Completely held-out (from 11,865 - 11,750 reserve)
 
 **Ratios:**
 
-- SFT:RLAIF = 50k:8k = 6.25x (optimal 5-10x)
-- SFT:RLHF = 50k:300 = 166x (optimal 100-200x)
+- SFT:RLAIF = 9.4k:2.15k = 4.37x (good, close to 5-10x optimal)
+- SFT:RLHF = 9.4k:200 = 47x (reasonable for project scope)
+- RLAIF:RLHF = 2.15k:200 = 10.75x (excellent for AI warmup)
 
 See **[DATASET_SIZES_SUMMARY.md](DATASET_SIZES_SUMMARY.md)** for detailed analysis.
 
@@ -179,7 +182,7 @@ Once SFT is complete, you'll move to:
 
 - **AWS Setup**: [AWS_SETUP_GUIDE.md](AWS_SETUP_GUIDE.md) - Complete walkthrough
 - **Execution Details**: [EXECUTION_GUIDE.md](EXECUTION_GUIDE.md) - Step-by-step commands
-- **Dataset Sizing**: [SFT_DATASET_SIZE_ANALYSIS.md](SFT_DATASET_SIZE_ANALYSIS.md) - Why 50k?
+- **Dataset Sizing**: [DATASET_SIZES_SUMMARY.md](DATASET_SIZES_SUMMARY.md) - Why 11.75k?
 - **Progress Tracking**: [TODO.md](TODO.md) - What's next?
 
 ## Quick Reference

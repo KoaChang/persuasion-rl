@@ -167,8 +167,8 @@ def main():
     parser.add_argument(
         "--max-examples",
         type=int,
-        default=50000,
-        help="Maximum number of examples to use (default: 50000, use 0 or None for all)"
+        default=11750,
+        help="Maximum number of examples to use (default: 11750, reserves 115 for final eval)"
     )
     
     args = parser.parse_args()

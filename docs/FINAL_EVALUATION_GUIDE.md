@@ -58,7 +58,7 @@ python src/eval/evaluate_model.py \
     --model-path Qwen/Qwen2.5-0.5B-Instruct \
     --base-model Qwen/Qwen2.5-0.5B-Instruct \
     --test-file data/preferences/final_eval_prompts.jsonl \
-    --num-samples 1700 \
+    --num-samples 115 \
     --output-file results/base_final_eval.json
 
 # Evaluate SFT model
@@ -66,7 +66,7 @@ python src/eval/evaluate_model.py \
     --model-path models/checkpoints/qwen-sft/final \
     --base-model Qwen/Qwen2.5-0.5B-Instruct \
     --test-file data/preferences/final_eval_prompts.jsonl \
-    --num-samples 1700 \
+    --num-samples 115 \
     --output-file results/sft_final_eval.json
 
 # Evaluate RLHF-only model
@@ -74,7 +74,7 @@ python src/eval/evaluate_model.py \
     --model-path models/checkpoints/qwen-rlhf/final \
     --base-model Qwen/Qwen2.5-0.5B-Instruct \
     --test-file data/preferences/final_eval_prompts.jsonl \
-    --num-samples 1700 \
+    --num-samples 115 \
     --output-file results/rlhf_final_eval.json
 
 # Evaluate RLAIF→RLHF model
@@ -82,7 +82,7 @@ python src/eval/evaluate_model.py \
     --model-path models/checkpoints/qwen-rlaif-rlhf/final \
     --base-model Qwen/Qwen2.5-0.5B-Instruct \
     --test-file data/preferences/final_eval_prompts.jsonl \
-    --num-samples 1700 \
+    --num-samples 115 \
     --output-file results/rlaif_rlhf_final_eval.json
 ```
 
@@ -122,10 +122,10 @@ Assign points based on rankings:
 - 3rd place: 1 point
 - 4th place: 0 points
 
-Aggregate across all 1,700 prompts:
+Aggregate across all 115 prompts:
 
 ```
-Score(model) = Total Points / (3 × 1700)
+Score(model) = Total Points / (3 × 115)
 ```
 
 This normalizes scores to 0-1 range (1.0 = always ranked first).
@@ -157,12 +157,12 @@ For each pair of models, count how often model A beats model B:
 
 ```python
 wins_A = sum(rank[A] > rank[B] for prompt in prompts)
-win_rate_A = wins_A / 1700
+win_rate_A = wins_A / 115
 ```
 
 ### Confidence Intervals
 
-With n=1,700, you can compute 95% confidence intervals:
+With n=115, you can compute 95% confidence intervals:
 
 ```python
 import scipy.stats as stats

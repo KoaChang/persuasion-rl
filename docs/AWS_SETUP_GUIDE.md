@@ -1,6 +1,6 @@
 # AWS Setup Guide for SFT Training
 
-This guide walks you through setting up AWS and running the complete SFT training pipeline (50k total: 40k SFT, 8k RLAIF, 300 RLHF, 1.7k eval; 10-12 hours, ~$13-16).
+This guide walks you through setting up AWS and running the complete SFT training pipeline (11.75k total: 9.4k SFT, 2.15k RLAIF, 200 RLHF, 115 final eval; 4-6 hours, ~$4-6).
 
 ## Table of Contents
 
@@ -146,7 +146,7 @@ wandb login
 # Use tmux to keep training running if connection drops
 tmux new -s training
 
-# Run full pipeline (50k total: 40k SFT, 8k RLAIF, 300 RLHF, 1.7k eval)
+# Run full pipeline (11.75k total: 9.4k SFT, 2.15k RLAIF, 200 RLHF, 115 final eval)
 bash scripts/run_sft_aws.sh
 
 # Detach from tmux: Ctrl+B then D
@@ -155,7 +155,7 @@ bash scripts/run_sft_aws.sh
 
 **⏱️ Time**: 13-16 hours  
 **💰 Cost**: ~$13-16  
-**Output**: Trained model (40k SFT) + 8k RLAIF pairs + 300 RLHF pairs + 1.7k held-out eval prompts
+**Output**: Trained model (9.4k SFT) + 2.15k RLAIF pairs + 200 RLHF pairs + 115 final eval prompts
 
 ---
 
@@ -253,7 +253,7 @@ scp -i ~/.ssh/persuasion-rl-key.pem -r \
 
 **Monitor at**: [wandb.ai](https://wandb.ai)  
 **Expected cost**: ~$13-16  
-**Output**: Trained model (40k SFT) + 8k RLAIF pairs + 300 RLHF pairs + 1.7k held-out eval prompts
+**Output**: Trained model (9.4k SFT) + 2.15k RLAIF pairs + 200 RLHF pairs + 115 final eval prompts
 
 ---
 
