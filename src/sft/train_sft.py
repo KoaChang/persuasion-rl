@@ -47,17 +47,42 @@ def preprocess_function(examples, tokenizer, max_length):
     """
     Tokenize the full_text field for supervised fine-tuning.
     The full_text includes both the prompt and the response.
+    
+    IMPORTANT: We only supervise the response tokens, not the prompt.
+    This is done by masking prompt tokens with -100 in the labels.
     """
-    # Tokenize
+    # Tokenize the prompt only (without response) to find its length
+    prompt_only = tokenizer(
+        examples["input_text"],
+        truncation=True,
+        max_length=max_length,
+        add_special_tokens=True,
+    )
+    prompt_length = len(prompt_only["input_ids"])
+    
+    # Tokenize the full text (prompt + response)
     result = tokenizer(
         examples["full_text"],
         truncation=True,
         max_length=max_length,
         padding="max_length",
+        add_special_tokens=True,
     )
     
-    # For causal LM, labels are the same as input_ids
-    result["labels"] = result["input_ids"].copy()
+    # Create labels: mask prompt tokens with -100, keep response tokens
+    labels = result["input_ids"].copy()
+    
+    # Mask all prompt tokens (including special tokens like <|im_start|>, etc.)
+    # The response starts after the prompt
+    for i in range(min(prompt_length, len(labels))):
+        labels[i] = -100
+    
+    # Also mask padding tokens
+    for i in range(len(labels)):
+        if labels[i] == tokenizer.pad_token_id:
+            labels[i] = -100
+    
+    result["labels"] = labels
     
     return result
 

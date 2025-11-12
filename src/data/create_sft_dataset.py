@@ -48,9 +48,15 @@ def create_sft_example(example: Dict) -> Dict:
     Convert a raw example into SFT format with prompt template.
     
     Returns dict with:
-    - input_text: prompt without response (for generation)
+    - input_text: prompt without response (for generation AND for computing prompt length during training)
     - full_text: prompt with response (for training)
+    - response: the target response alone
     - metadata: preserved from original
+    
+    Note: Both input_text and full_text are needed for proper supervised fine-tuning.
+    During training, we tokenize input_text to find where the prompt ends, then mask
+    those tokens with -100 so the loss is only computed on the response tokens.
+    This ensures the model learns to generate persuasive responses, not memorize prompts.
     """
     context = example['context']
     response = example['response']
@@ -58,7 +64,7 @@ def create_sft_example(example: Dict) -> Dict:
     # Full text for training (input + target)
     full_text = PROMPT_TEMPLATE.format(context=context, response=response)
     
-    # Input only (for generation/inference)
+    # Input only (for generation/inference AND for finding prompt length during training)
     input_text = PROMPT_TEMPLATE_NO_RESPONSE.format(context=context)
     
     return {
