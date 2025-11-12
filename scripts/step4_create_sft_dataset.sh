@@ -6,10 +6,10 @@
 set -e
 
 # Activate virtual environment if not already activated
-if [[ -z "$VIRTUAL_ENV" ]]; then
-    echo "Activating virtual environment..."
-    source venv/bin/activate
-fi
+# if [[ -z "$VIRTUAL_ENV" ]]; then
+#     echo "Activating virtual environment..."
+#     source venv/bin/activate
+# fi
 
 echo "================================================"
 echo "Step 4: Creating SFT dataset..."
@@ -19,10 +19,11 @@ echo ""
 
 # Default: Use CMV only
 # To use P4G, add --use-p4g and --p4g-file flags
+# Reserves 115 examples for final evaluation by default (--reserve-final-eval 115)
 python src/data/create_sft_dataset.py \
     --cmv-file data/processed/cmv_examples.jsonl \
     --use-cmv \
-    --max-examples 11750 \
+    --reserve-final-eval 115 \
     --output-dir data/processed
 
 echo ""

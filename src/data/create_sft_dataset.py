@@ -94,6 +94,26 @@ def split_dataset(
     return train, val, test
 
 
+def reserve_final_eval_set(
+    examples: List[Dict],
+    num_reserve: int,
+    seed: int = 42
+) -> tuple:
+    """
+    Reserve a set of examples for final evaluation (held-out from all training).
+    
+    Returns:
+        (reserved_examples, remaining_examples)
+    """
+    random.seed(seed)
+    random.shuffle(examples)
+    
+    reserved = examples[:num_reserve]
+    remaining = examples[num_reserve:]
+    
+    return reserved, remaining
+
+
 def save_jsonl(examples: List[Dict], output_path: Path):
     """Save examples to JSONL file."""
     output_path.parent.mkdir(parents=True, exist_ok=True)
@@ -167,8 +187,14 @@ def main():
     parser.add_argument(
         "--max-examples",
         type=int,
-        default=11750,
-        help="Maximum number of examples to use (default: 11750, reserves 115 for final eval)"
+        default=None,
+        help="Maximum number of examples to use from loaded data (None = use all available)"
+    )
+    parser.add_argument(
+        "--reserve-final-eval",
+        type=int,
+        default=115,
+        help="Number of examples to reserve for final evaluation (default: 115)"
     )
     
     args = parser.parse_args()
@@ -209,9 +235,25 @@ def main():
     
     print(f"\nTotal examples loaded: {len(all_examples)}")
     
-    # Apply max examples limit if specified
+    # First: Reserve examples for final evaluation (completely held-out)
+    final_eval_raw = []
+    if args.reserve_final_eval and args.reserve_final_eval > 0:
+        if len(all_examples) < args.reserve_final_eval:
+            print(f"⚠ Warning: Not enough examples to reserve {args.reserve_final_eval} for final eval")
+            print(f"  Available: {len(all_examples)}, Requested: {args.reserve_final_eval}")
+            print("  Skipping final eval reservation")
+        else:
+            final_eval_raw, all_examples = reserve_final_eval_set(
+                all_examples,
+                num_reserve=args.reserve_final_eval,
+                seed=args.seed
+            )
+            print(f"✓ Reserved {len(final_eval_raw)} examples for final evaluation (held-out)")
+            print(f"  Remaining for SFT: {len(all_examples)} examples")
+    
+    # Second: Apply max examples limit if specified (on remaining examples)
     if args.max_examples and args.max_examples > 0 and args.max_examples < len(all_examples):
-        random.seed(args.seed)
+        random.seed(args.seed + 1)  # Different seed to avoid correlation
         all_examples = random.sample(all_examples, args.max_examples)
         print(f"Sampled {len(all_examples)} examples (limited by --max-examples={args.max_examples})")
     elif args.max_examples and args.max_examples > 0:
@@ -220,6 +262,9 @@ def main():
     # Convert to SFT format
     print("\nApplying prompt template...")
     sft_examples = [create_sft_example(ex) for ex in all_examples]
+    
+    # Also convert final eval examples to SFT format
+    final_eval_sft = [create_sft_example(ex) for ex in final_eval_raw] if final_eval_raw else []
     
     # Split into train/val/test
     print("Creating train/val/test splits...")
@@ -242,6 +287,25 @@ def main():
     save_jsonl(test, output_dir / "sft_test.jsonl")
     
     print(f"✓ Saved train/val/test splits to {output_dir}/")
+    
+    # Save final eval set if it exists
+    if final_eval_sft:
+        save_jsonl(final_eval_sft, output_dir / "final_eval_reserved.jsonl")
+        print(f"✓ Saved {len(final_eval_sft)} final evaluation examples to {output_dir}/final_eval_reserved.jsonl")
+        print(f"  🔒 These examples are COMPLETELY HELD-OUT from all training/preference generation")
+        print(f"     Use them only for final model evaluation!")
+    
+    # Print summary
+    print("\n" + "="*80)
+    print("Dataset Summary:")
+    print("="*80)
+    print(f"  SFT Train: {len(train)} examples ({args.train_ratio*100:.1f}%)")
+    print(f"  SFT Val: {len(val)} examples ({args.val_ratio*100:.1f}%)")
+    print(f"  SFT Test: {len(test)} examples ({args.test_ratio*100:.1f}%)")
+    if final_eval_sft:
+        print(f"  Final Eval (held-out): {len(final_eval_sft)} examples 🔒")
+    print(f"\n  Val + Test prompts: {len(val) + len(test)} (for preference generation)")
+    print("="*80)
     
     # Print example
     print("\n" + "="*80)

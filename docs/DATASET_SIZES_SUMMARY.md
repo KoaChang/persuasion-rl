@@ -144,25 +144,31 @@ After analysis of available data and RL requirements, the default configuration 
 ```
 CMV Dataset (delta-winning comments)
     ↓
-Preprocessing & Filtering
+Preprocessing & Filtering (preprocess_cmv.py)
     ↓
-11,865 examples available
+11,865 examples available (cmv_examples.jsonl)
     ↓
-    ├── 11,750 used for training pipeline
-    │       ↓
-    │       ├── 9,400 (80%) → SFT Training
-    │       ├── 1,175 (10%) → SFT Validation
-    │       └── 1,175 (10%) → SFT Testing
-    │               ↓
-    │       Val + Test shuffled together (2,350 prompts)
-    │               ↓
-    │               ├── 2,150 prompts (91.5%) → RLAIF pool
-    │               └── 200 prompts (8.5%) → RLHF pool
+create_sft_dataset.py (Step 4)
+    ↓
+    ├── FIRST: Reserve 115 examples → final_eval_reserved.jsonl 🔒
+    │   (completely held-out, never used in training or preferences)
     │
-    └── 115 (1%) → Final Eval Set (completely held-out) 🔒
+    └── THEN: Use remaining 11,750 examples
+            ↓
+            Split 80/10/10:
+            ├── 9,400 (80%) → sft_train.jsonl (SFT Training)
+            ├── 1,175 (10%) → sft_val.jsonl (SFT Validation)
+            └── 1,175 (10%) → sft_test.jsonl (SFT Testing)
+                    ↓
+            generate_preferences.py (Step 6)
+                    ↓
+            Val + Test shuffled together (2,350 prompts)
+                    ↓
+                    ├── 2,150 prompts (91.5%) → RLAIF pool
+                    └── 200 prompts (8.5%) → RLHF pool
 ```
 
-**🔒 Key Feature**: The 115 held-out examples provide unbiased final evaluation, while all val+test prompts are used for preference generation, maximizing training efficiency!
+**🔒 Key Feature**: The 115 examples are set aside FIRST in Step 4, before any training splits are created. This ensures they are completely held-out from all training and preference generation. All 2,350 val+test prompts are then used efficiently for preference generation, maximizing training data!
 
 ## Cost Breakdown
 

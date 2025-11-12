@@ -34,9 +34,9 @@ These tasks require actual execution on AWS with GPU and cannot be completed pro
 - **Prerequisites**: Trained SFT model from step 1
 - **Script**: Part of `src/sft/generate_preferences.py`
 - **Output**:
-  - RLAIF pool: 8,000 prompts (AI-graded preferences)
-  - RLHF pool: 300 prompts (human-graded preferences)
-  - Held-out eval: 1,700 prompts (final evaluation)
+  - RLAIF pool: 2,150 prompts (AI-graded preferences)
+  - RLHF pool: 200 prompts (human-graded preferences)
+  - Final eval: 115 examples (reserved in step 4, held-out from all training)
 
 ### 3. Generate Preference Data
 

@@ -65,7 +65,7 @@ echo "================================================"
 python src/data/create_sft_dataset.py \
     --cmv-file data/processed/cmv_examples.jsonl \
     --use-cmv \
-    --max-examples 11750 \
+    --reserve-final-eval 115 \
     --output-dir data/processed
 
 echo ""
@@ -82,6 +82,10 @@ python src/sft/generate_preferences.py \
     --model-path models/checkpoints/qwen-sft/final \
     --base-model Qwen/Qwen2.5-0.5B-Instruct \
     --test-file data/processed/sft_test.jsonl \
+    --val-file data/processed/sft_val.jsonl \
+    --use-val-set \
+    --ai-pool-size 2150 \
+    --human-pool-size 200 \
     --output-dir data/preferences
 
 echo ""

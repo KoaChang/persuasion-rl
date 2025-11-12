@@ -8,7 +8,8 @@ preprocessing:
 datasets:
   use_cmv: true  # Use CMV (ChangeMyView) dataset
   use_p4g: false  # Use PersuasionForGood dataset (set to false to skip)
-  max_examples: 11750  # Maximum total examples (null for no limit)
+  max_examples: null  # Maximum total examples (null for no limit)
+  reserve_final_eval: 115  # Number of examples to reserve for final evaluation
 
 splits:
   train_ratio: 0.8

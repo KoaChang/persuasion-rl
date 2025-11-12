@@ -6,27 +6,28 @@ After training all your models (Base, SFT, RLHF-only, RLAIF→RLHF), you'll need
 
 ## Held-Out Test Set
 
-During preference generation, the system automatically saves **~1,700 prompts** that are:
+During dataset creation (Step 4), the system automatically reserves **115 examples** that are:
 
-✅ **Never used for SFT training** (from val/test splits)  
+✅ **Never used for SFT training** (reserved before any splits)  
 ✅ **Never used for preference generation** (not in AI or Human pools)  
 ✅ **Never seen during any RL training**  
 ✅ **Perfect for final evaluation**
 
-**Location**: `data/preferences/final_eval_prompts.jsonl`
+**Location**: `data/processed/final_eval_reserved.jsonl`
 
 ## Dataset Breakdown
 
 ```
-Total data: 50,000 examples
-├─ Training: 40,000 (80%) → Used for SFT training
-└─ Val + Test: 10,000 (20%) → Shuffled together, then split:
-    ├─ 8,000 → Used for RLAIF preference generation
-    ├─ 300 → Used for RLHF preference generation
-    └─ 1,700 → HELD OUT for final evaluation ⭐
+Total CMV data: 11,865 examples
+├─ Final Eval: 115 → RESERVED FIRST (held-out) ⭐ 🔒
+└─ Remaining: 11,750 → Split into:
+    ├─ Training: 9,400 (80%) → Used for SFT training
+    └─ Val + Test: 2,350 (20%) → Shuffled together, then split:
+        ├─ 2,150 (91.5%) → Used for RLAIF preference generation
+        └─ 200 (8.5%) → Used for RLHF preference generation
 ```
 
-**Note**: Val (5k) + Test (5k) are shuffled together before splitting into pools, so the 1,700 held-out prompts are a random mix from both splits.
+**Key Point**: The 115 examples are set aside FIRST in Step 4 (`create_sft_dataset.py`), before any training splits are created. This ensures they are completely held-out from all training and preference generation.
 
 ## Why This Matters
 
@@ -57,7 +58,7 @@ source venv/bin/activate
 python src/eval/evaluate_model.py \
     --model-path Qwen/Qwen2.5-0.5B-Instruct \
     --base-model Qwen/Qwen2.5-0.5B-Instruct \
-    --test-file data/preferences/final_eval_prompts.jsonl \
+    --test-file data/processed/final_eval_reserved.jsonl \
     --num-samples 115 \
     --output-file results/base_final_eval.json
 
@@ -65,7 +66,7 @@ python src/eval/evaluate_model.py \
 python src/eval/evaluate_model.py \
     --model-path models/checkpoints/qwen-sft/final \
     --base-model Qwen/Qwen2.5-0.5B-Instruct \
-    --test-file data/preferences/final_eval_prompts.jsonl \
+    --test-file data/processed/final_eval_reserved.jsonl \
     --num-samples 115 \
     --output-file results/sft_final_eval.json
 
@@ -73,7 +74,7 @@ python src/eval/evaluate_model.py \
 python src/eval/evaluate_model.py \
     --model-path models/checkpoints/qwen-rlhf/final \
     --base-model Qwen/Qwen2.5-0.5B-Instruct \
-    --test-file data/preferences/final_eval_prompts.jsonl \
+    --test-file data/processed/final_eval_reserved.jsonl \
     --num-samples 115 \
     --output-file results/rlhf_final_eval.json
 
@@ -81,7 +82,7 @@ python src/eval/evaluate_model.py \
 python src/eval/evaluate_model.py \
     --model-path models/checkpoints/qwen-rlaif-rlhf/final \
     --base-model Qwen/Qwen2.5-0.5B-Instruct \
-    --test-file data/preferences/final_eval_prompts.jsonl \
+    --test-file data/processed/final_eval_reserved.jsonl \
     --num-samples 115 \
     --output-file results/rlaif_rlhf_final_eval.json
 ```
@@ -149,7 +150,7 @@ Based on the project design, you should see something like:
 
 ## Statistical Analysis
 
-With 1,700 test prompts, you have strong statistical power:
+With 115 test prompts, you have reasonable statistical power for detecting meaningful differences:
 
 ### Win Rate Analysis
 
@@ -222,7 +223,7 @@ Find prompts where all models failed:
 
 1. **Dataset**:
 
-   - "1,700 held-out prompts, never used for training or preference generation"
+   - "115 held-out examples, reserved before any training splits, never used for training or preference generation"
    - Explain why this ensures unbiased comparison
 
 2. **Grader Model**:
@@ -257,7 +258,7 @@ Find prompts where all models failed:
 ❌ **Don't** ignore statistical significance  
 ❌ **Don't** forget to randomize grader position (A/B/C/D)
 
-✅ **Do** use the held-out set (final_eval_prompts.jsonl)  
+✅ **Do** use the held-out set (final_eval_reserved.jsonl)  
 ✅ **Do** report all results (wins and losses)  
 ✅ **Do** include error bars/confidence intervals  
 ✅ **Do** show example outputs  

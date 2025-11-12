@@ -248,14 +248,14 @@ def main():
     parser.add_argument(
         "--ai-pool-size",
         type=int,
-        default=8000,
-        help="Number of prompts for AI pool"
+        default=2150,
+        help="Number of prompts for RLAIF pool (default: 2150)"
     )
     parser.add_argument(
         "--human-pool-size",
         type=int,
-        default=300,
-        help="Number of prompts for human pool"
+        default=200,
+        help="Number of prompts for RLHF pool (default: 200)"
     )
     parser.add_argument(
         "--temperature",
@@ -313,14 +313,15 @@ def main():
     print(f"  AI pool: {ai_prompts_file}")
     print(f"  Human pool: {human_prompts_file}")
     
-    # Save held-out prompts for final evaluation
+    # Save held-out prompts for final evaluation (if any)
     if unused_pool:
         save_jsonl(unused_pool, str(final_eval_file))
-        print(f"  Final eval (held-out): {final_eval_file} ({len(unused_pool)} prompts)")
+        print(f"  Final eval (from val+test): {final_eval_file} ({len(unused_pool)} prompts)")
         print(f"\n  ⭐ These {len(unused_pool)} prompts are NEVER used for preference generation.")
         print(f"     Use them for unbiased final evaluation of all models!")
     else:
-        print(f"\n  Note: No unused prompts (all {len(ai_pool) + len(human_pool)} used for preferences)")
+        print(f"\n  Note: No unused prompts from val+test (all {len(ai_pool) + len(human_pool)} used for preferences)")
+        print(f"  💡 The 115 final eval examples were reserved separately in Step 4 (final_eval_reserved.jsonl)")
     
     # Load model
     print(f"\nLoading trained SFT model from {args.model_path}...")
