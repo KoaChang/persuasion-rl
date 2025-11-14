@@ -166,8 +166,6 @@ This creates:
 - `data/processed/sft_val.jsonl` (10%)
 - `data/processed/sft_test.jsonl` (10%)
 
-See [docs/CMV_ONLY_CONFIGURATION.md](docs/CMV_ONLY_CONFIGURATION.md) for details.
-
 #### 5. Train SFT Model
 
 **Note**: Requires GPU (CUDA)
@@ -414,5 +412,3 @@ If you use this code, please cite:
 MIT License
 
 ## Contact
-
-For questions or issues, please open a GitHub issue or contact [your email].
