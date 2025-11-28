@@ -2,13 +2,13 @@
 # Fill in your API keys below
 
 anthropic:
-  api_key: "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" # TODO: Fill in your Claude API key
+  api_key: "blank"
   model: "claude-sonnet-4-5-20250929"
   max_tokens: 1000
   temperature: 0.0 # Deterministic for grading consistency
 
 openai:
-  api_key: "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" # TODO: Fill in your OpenAI API key
+  api_key: "blank"
   embedding_model: "text-embedding-3-large"
   embedding_dimensions: 3072
   max_retries: 3
@@ -16,5 +16,5 @@ openai:
 
 # Rate limiting (to avoid API quota issues)
 rate_limiting:
-  requests_per_minute: 5  # Claude Sonnet 4.5 API limit
+  requests_per_minute: 5 # Claude Sonnet 4.5 API limit
   retry_delay: 2 # seconds
