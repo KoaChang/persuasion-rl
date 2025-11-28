@@ -15,6 +15,10 @@ from tqdm import tqdm
 import torch
 from transformers import AutoTokenizer, set_seed
 
+from anthropic import Anthropic
+
+client = Anthropic()
+
 # Add parent directory to path
 sys.path.append(str(Path(__file__).parent.parent))
 from models.model_utils import load_trained_model
@@ -159,8 +163,39 @@ def generate_two_responses(
     
     return responses
 
+def generate_label_response(
+        model,
+        prompt,
+        responses,
+        temperature: float = 0.7,
+        max_tokens: int = 5
+):
+    label_query = (
+        "You are a strict preference judge.\n\n"
+        f"Prompt:\n{prompt}\n\n"
+        f"Response 1:\n{responses[0]}\n\n"
+        f"Response 2:\n{responses[1]}\n\n"
+        "Which response is the better argument?\n"
+        "Answer with ONLY one character: 1 or 2."
+    )
 
-def generate_preference_data(
+    messages = {"role": "user", "content": label_query}
+
+    response = client.message.create(
+        model=model,
+        messages=messages,
+        temperature=temperature,
+        max_tokens=max_tokens
+    )
+
+    answer = response.content[0].text.strip()
+    if answer != "1" and answer != "2":
+        raise ValueError(f"Unexpected response: {answer}")
+
+    return int(answer)
+
+
+def generate_sft_preference_data(
     model,
     tokenizer,
     prompts: List[Dict],
@@ -202,6 +237,74 @@ def generate_preference_data(
     
     print(f"Generated {len(results)} preference pairs")
     
+    # Save results
+    save_jsonl(results, output_file)
+    print(f"Saved to {output_file}")
+
+
+def generate_dpo_preference_data(
+        model,
+        label_model,
+        tokenizer,
+        prompts: List[Dict],
+        output_file: str,
+        model_temperature: float = 0.7,
+        label_temperature: float = 0.0,
+        top_p: float = 0.9,
+        max_new_tokens: int = 256,
+        max_label_tokens: int = 5,
+        device: str = "cuda"
+):
+    """
+    For each prompt, generate 2 responses and label them.
+    """
+    results = []
+
+    print(f"Generating labels for {len(prompts)} prompts...")
+    for prompt_data in tqdm(prompts):
+        prompt = prompt_data["prompt"]
+
+        try:
+            responses = generate_two_responses(
+                model=model,
+                tokenizer=tokenizer,
+                prompt=prompt,
+                temperature=model_temperature,
+                top_p=top_p,
+                max_new_tokens=max_new_tokens,
+                device=device
+            )
+
+            answer = generate_label_response(
+                model=label_model,
+                prompt=prompt,
+                responses=responses,
+                temperature=label_temperature,
+                max_tokens=max_label_tokens
+            )
+
+            if answer == 1:
+                results.append({
+                    "prompt": prompt,
+                    "chosen": responses[0],
+                    "rejected": responses[1],
+                    "metadata": prompt_data.get("metadata", {})
+                })
+
+            else:
+                results.append({
+                    "prompt": prompt,
+                    "chosen": responses[1],
+                    "rejected": responses[0],
+                    "metadata": prompt_data.get("metadata", {})
+                })
+
+        except Exception as e:
+            print(f"\nError generating for prompt: {e}")
+            continue
+
+    print(f"Generated {len(results)} preference pairs")
+
     # Save results
     save_jsonl(results, output_file)
     print(f"Saved to {output_file}")
@@ -338,7 +441,7 @@ def main():
     print("Generating responses for AI pool...")
     print("="*80)
     ai_responses_file = output_dir / "ai_pool_responses.jsonl"
-    generate_preference_data(
+    generate_sft_preference_data(
         model=model,
         tokenizer=tokenizer,
         prompts=ai_pool,
@@ -354,7 +457,7 @@ def main():
     print("Generating responses for human pool...")
     print("="*80)
     human_responses_file = output_dir / "human_pool_responses.jsonl"
-    generate_preference_data(
+    generate_sft_preference_data(
         model=model,
         tokenizer=tokenizer,
         prompts=human_pool,
