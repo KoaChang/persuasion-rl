@@ -2,13 +2,13 @@
 # Fill in your API keys below
 
 anthropic:
-  api_key: "blank"
+  api_key: "TODO"
   model: "claude-sonnet-4-5-20250929"
   max_tokens: 1000
   temperature: 0.0 # Deterministic for grading consistency
 
 openai:
-  api_key: "blank"
+  api_key: "TODO"
   embedding_model: "text-embedding-3-large"
   embedding_dimensions: 3072
   max_retries: 3
