@@ -1,0 +1,34 @@
+# Evaluation Configuration
+
+# Base model and checkpoint paths
+base_model: "Qwen/Qwen2.5-0.5B-Instruct"
+sft_model_path: "./models/checkpoints/qwen-sft/final"
+rlhf_model_path: "./models/checkpoints/qwen-rlhf/final"
+rlaif_rlhf_model_path: "./models/checkpoints/qwen-rlaif-rlhf/final"
+
+# Generation settings
+generation:
+  max_new_tokens: 256
+  temperature: 0.7
+  top_p: 0.9
+  do_sample: true
+
+# Oracle generation (Claude 4.5 Sonnet)
+oracle:
+  generate: true  # Set to false if oracle responses already exist
+  temperature: 0.7
+
+# Evaluation settings
+evaluation:
+  test_file: "./data/processed/final_eval_reserved.jsonl"
+  output_dir: "./results"
+  save_per_example: true  # Save detailed per-example results
+
+  # Position randomization for grader (to avoid position bias)
+  randomize_positions: true
+  random_seed: 42
+
+# Batch processing (for API efficiency)
+batch:
+  embeddings_batch_size: 10  # Process embeddings in batches
+  save_every: 10  # Save progress every N examples

@@ -1,0 +1,20 @@
+# API Configuration for Claude and OpenAI
+# Fill in your API keys below
+
+anthropic:
+  api_key: "TODO"
+  model: "claude-sonnet-4-5-20250929"
+  max_tokens: 1000
+  temperature: 0.0 # Deterministic for grading consistency
+
+openai:
+  api_key: "TODO"
+  embedding_model: "text-embedding-3-large"
+  embedding_dimensions: 3072
+  max_retries: 3
+  timeout: 60
+
+# Rate limiting (to avoid API quota issues)
+rate_limiting:
+  requests_per_minute: 5 # Claude Sonnet 4.5 API limit
+  retry_delay: 2 # seconds
