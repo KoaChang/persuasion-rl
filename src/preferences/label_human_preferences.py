@@ -138,6 +138,7 @@ def main():
         print(f"Resuming from {completed} completed examples")
     elif not args.resume and os.path.exists(args.output_file):
         # Confirm overwrite
+        print(args.output_file)
         confirm = input("Output file exists. Overwrite? [y/N]: ").strip().lower()
         if confirm == 'y':
             os.remove(args.output_file)
