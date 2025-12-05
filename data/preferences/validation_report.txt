@@ -1,0 +1,51 @@
+================================================================================
+PREFERENCE DATASET VALIDATION REPORT
+================================================================================
+
+
+--------------------------------------------------------------------------------
+AI Pool (RLAIF)
+--------------------------------------------------------------------------------
+Total examples: 1309
+Missing fields: 0
+Duplicates: 0
+
+Preference Distribution:
+  1: 682 (52.1%)
+  2: 627 (47.9%)
+  Equal: 994 (75.9%)
+
+Length Statistics:
+  Avg chosen length: 1179.0 characters
+  Avg rejected length: 1176.6 characters
+  Ratio: 1.00x
+  Avg chosen tokens: 255.9
+  Avg rejected tokens: 256.0
+  Token ratio: 1.00x
+
+--------------------------------------------------------------------------------
+Human Pool (RLHF)
+--------------------------------------------------------------------------------
+Total examples: 189
+Missing fields: 0
+Duplicates: 0
+
+Preference Distribution:
+  1: 115 (60.8%)
+  2: 74 (39.2%)
+  Equal: 29 (15.3%)
+
+Length Statistics:
+  Avg chosen length: 1185.6 characters
+  Avg rejected length: 1154.3 characters
+  Ratio: 1.03x
+  Avg chosen tokens: 256.0
+  Avg rejected tokens: 255.9
+  Token ratio: 1.00x
+
+================================================================================
+SUMMARY
+================================================================================
+Total RLAIF examples: 1309
+Total RLHF examples: 189
+RLAIF:RLHF ratio: 6.93x
