@@ -295,19 +295,25 @@ def main():
 
         # Get grader ranking
         print("Getting grader ranking...", end=" ", flush=True)
-        ranking, explanation = grader.rank_responses(prompt, labeled_responses)
-        scores = grader.assign_scores(ranking)
-        print("✓")
+        try:
+            ranking, explanation = grader.rank_responses(prompt, labeled_responses)
+            scores = grader.assign_scores(ranking)
+            print("✓")
 
-        # Map back to model names
-        model_scores = {
-            position_map[pos]: score
-            for pos, score in scores.items()
-        }
+            # Map back to model names
+            model_scores = {
+                position_map[pos]: score
+                for pos, score in scores.items()
+            }
 
-        # Accumulate grader scores
-        for model_name, score in model_scores.items():
-            results['grader_scores'][model_name] += score
+            # Accumulate grader scores
+            for model_name, score in model_scores.items():
+                results['grader_scores'][model_name] += score
+        except ValueError as e:
+            print(f"⚠ Failed to parse ranking, skipping grader scores for this example")
+            ranking = None
+            explanation = f"Parse error: {str(e)[:100]}"
+            model_scores = {model: 0 for model in model_names}
 
         # Compute similarity scores
         print("Computing similarity scores...", end=" ", flush=True)

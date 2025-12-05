@@ -277,6 +277,9 @@ Then provide a brief explanation (2-3 sentences) of your ranking.
 
     def _parse_ranking(self, response_text: str) -> List[str]:
         """Parse ranking from response text."""
+        import re
+        
+        # Method 1: Look for explicit "RANKING:" line
         lines = response_text.strip().split('\n')
         for line in lines:
             if line.startswith('RANKING:'):
@@ -285,6 +288,21 @@ Then provide a brief explanation (2-3 sentences) of your ranking.
                 ranking = [label.strip() for label in ranking_str.split('>')]
                 if len(ranking) == 4 and all(label in ['A', 'B', 'C', 'D'] for label in ranking):
                     return ranking
+        
+        # Method 2: Look for pattern "A > B > C > D" anywhere in response
+        pattern = r'\b([ABCD])\s*>\s*([ABCD])\s*>\s*([ABCD])\s*>\s*([ABCD])\b'
+        match = re.search(pattern, response_text)
+        if match:
+            ranking = list(match.groups())
+            if len(set(ranking)) == 4:  # All unique
+                return ranking
+        
+        # Method 3: Look for numbered list like "1. A" or "1) A"
+        numbered_pattern = r'(?:^|\n)\s*[1-4][.)]\s*([ABCD])\b'
+        matches = re.findall(numbered_pattern, response_text)
+        if len(matches) == 4 and len(set(matches)) == 4:
+            return matches
+        
         raise ValueError(f"Could not parse ranking from: {response_text}")
 
 

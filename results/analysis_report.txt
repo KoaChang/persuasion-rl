@@ -1,0 +1,36 @@
+================================================================================
+EVALUATION ANALYSIS REPORT
+================================================================================
+
+Number of examples: 115
+Models evaluated: base, sft, rlhf, rlaif_rlhf
+
+Grader Normalized Scores:
+  rlhf: 0.603
+  base: 0.559
+  rlaif_rlhf: 0.536
+  sft: 0.301
+
+Average Similarity Scores:
+  rlhf: 0.648
+  base: 0.639
+  rlaif_rlhf: 0.617
+  sft: 0.570
+
+Pairwise Win Rates:
+  base:
+    vs sft: 0.687
+    vs rlhf: 0.443
+    vs rlaif_rlhf: 0.548
+  sft:
+    vs base: 0.313
+    vs rlhf: 0.261
+    vs rlaif_rlhf: 0.330
+  rlhf:
+    vs base: 0.557
+    vs sft: 0.739
+    vs rlaif_rlhf: 0.513
+  rlaif_rlhf:
+    vs base: 0.452
+    vs sft: 0.670
+    vs rlhf: 0.487

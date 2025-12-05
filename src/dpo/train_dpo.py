@@ -20,7 +20,7 @@ import sys
 import yaml
 import torch
 from datasets import load_dataset
-from transformers import AutoTokenizer, TrainingArguments
+from transformers import AutoTokenizer
 from trl import DPOTrainer, DPOConfig
 from peft import LoraConfig, get_peft_model, PeftModel
 
@@ -181,9 +181,9 @@ def main():
     policy_model = get_policy_model(config, stage_config, args.stage)
     reference_model = get_reference_model(config)
 
-    # DPO training arguments
+    # DPO training arguments (using DPOConfig which extends TrainingArguments)
     print("\nSetting up training arguments...")
-    training_args = TrainingArguments(
+    training_args = DPOConfig(
         output_dir=stage_config["output_dir"],
         learning_rate=stage_config["learning_rate"],
         num_train_epochs=stage_config["num_epochs"],
@@ -205,6 +205,11 @@ def main():
         report_to="wandb" if config["wandb"]["enabled"] else "none",
         run_name=f"{config['wandb']['project']}-{args.stage}" if config["wandb"]["enabled"] else None,
         remove_unused_columns=False,
+        # DPO-specific settings
+        beta=dpo_config["beta"],
+        max_length=dpo_config["max_seq_length"],
+        max_prompt_length=dpo_config["max_prompt_length"],
+        max_completion_length=dpo_config["max_target_length"],
     )
 
     # Print training summary
@@ -235,7 +240,7 @@ def main():
     print(f"  Beta: {dpo_config['beta']}")
     print(f"  Max sequence length: {dpo_config['max_seq_length']}")
     print(f"  Max prompt length: {dpo_config['max_prompt_length']}")
-    print(f"  Max target length: {dpo_config['max_target_length']}")
+    print(f"  Max completion length: {dpo_config['max_target_length']}")
     print("=" * 80)
 
     # Initialize DPO trainer
@@ -246,11 +251,7 @@ def main():
         args=training_args,
         train_dataset=dataset["train"],
         eval_dataset=dataset["validation"],
-        tokenizer=tokenizer,
-        beta=dpo_config["beta"],
-        max_length=dpo_config["max_seq_length"],
-        max_prompt_length=dpo_config["max_prompt_length"],
-        max_target_length=dpo_config["max_target_length"],
+        processing_class=tokenizer,
     )
 
     # Train
